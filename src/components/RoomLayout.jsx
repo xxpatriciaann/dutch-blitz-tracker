@@ -91,7 +91,7 @@ function RoomLayout({ children }) {
 
         {/* Tabs */}
         <div className="max-w-2xl mx-auto px-4">
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -99,7 +99,7 @@ function RoomLayout({ children }) {
                 <button
                   key={tab.id}
                   onClick={() => navigate(tab.path)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition ${
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition flex-shrink-0 ${
                     isActive
                       ? 'border-orange-500 text-orange-500'
                       : 'border-transparent text-zinc-400 hover:text-navy-500'
@@ -112,7 +112,7 @@ function RoomLayout({ children }) {
             })}
 
             {/* Record Game button */}
-            <div className="ml-auto flex items-center pb-1">
+            <div className="flex items-center pb-1 flex-shrink-0">
               <button
                 onClick={() => navigate(`/room/${code}/record`)}
                 className={`flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white text-sm font-bold px-4 py-2 rounded-xl transition ${
