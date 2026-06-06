@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { ArrowRight, Plus, Users } from 'lucide-react'
+import { ArrowRight, Plus, Users, Smartphone, X } from 'lucide-react'
 
 function Home() {
+  const [showInstallModal, setShowInstallModal] = useState(false)
   const [roomName, setRoomName] = useState('')
   const [roomPassword, setRoomPassword] = useState('')
   const [joinCode, setJoinCode] = useState('')
@@ -190,10 +191,119 @@ function Home() {
           </div>
         )}
 
+        {/* Install Button */}
+        <button
+          onClick={() => setShowInstallModal(true)}
+          className="flex items-center gap-2 mx-auto mt-8 text-zinc-400 hover:text-navy-500 transition text-xs font-medium"
+        >
+          <Smartphone size={14} strokeWidth={2} />
+          Install as app on your phone
+        </button>
+
         {/* Footer */}
-        <p className="text-zinc-300 text-xs text-center mt-8">
+        <p className="text-zinc-300 text-xs text-center mt-3">
           Your family's scores, saved forever. Developed by Patricia Ann Cajucom.
         </p>
+
+        {/* Install Modal */}
+        {showInstallModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-5 border-b-2 border-zinc-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-navy-500 rounded-xl flex items-center justify-center">
+                    <Smartphone size={18} color="white" strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-navy-500 font-bold text-base leading-none">Install App</h3>
+                    <p className="text-zinc-400 text-xs mt-0.5">Save to your home screen</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowInstallModal(false)}
+                  className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-lg flex items-center justify-center transition"
+                >
+                  <X size={16} color="#71717a" strokeWidth={2.5} />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-5">
+
+                {/* iPhone */}
+                <div className="mb-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-6 h-6 bg-zinc-100 rounded-lg flex items-center justify-center">
+                      <span className="text-xs font-black text-zinc-500">🍎</span>
+                    </div>
+                    <p className="text-navy-500 font-bold text-sm">iPhone (Safari)</p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      'Open this website in Safari',
+                      'Tap the Share button — the box with an arrow at the bottom of the screen',
+                      'Scroll down and tap "Add to Home Screen"',
+                      'Tap "Add" to confirm'
+                    ].map((step, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-white font-black text-xs">{index + 1}</span>
+                        </div>
+                        <p className="text-zinc-500 text-sm">{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="flex-1 h-px bg-zinc-100" />
+                  <span className="text-zinc-300 text-xs">or</span>
+                  <div className="flex-1 h-px bg-zinc-100" />
+                </div>
+
+                {/* Android */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-6 h-6 bg-zinc-100 rounded-lg flex items-center justify-center">
+                      <span className="text-xs font-black text-zinc-500">🤖</span>
+                    </div>
+                    <p className="text-navy-500 font-bold text-sm">Android (Chrome)</p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      'Open this website in Chrome',
+                      'Tap the 3 dots menu at the top right',
+                      'Tap "Add to Home Screen" or "Install App"',
+                      'Tap "Install" to confirm'
+                    ].map((step, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-navy-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-white font-black text-xs">{index + 1}</span>
+                        </div>
+                        <p className="text-zinc-500 text-sm">{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-5 pb-5">
+                <button
+                  onClick={() => setShowInstallModal(false)}
+                  className="w-full bg-navy-500 hover:bg-navy-600 text-white font-bold py-3 rounded-xl transition"
+                >
+                  Got it!
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
