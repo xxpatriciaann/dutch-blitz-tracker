@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { Trophy, ChevronRight } from 'lucide-react'
+import { Trophy, ChevronRight, Swords } from 'lucide-react'
 
 function RoomDashboard() {
   const { code } = useParams()
   const navigate = useNavigate()
   const [leaderboard, setLeaderboard] = useState([])
+  const [rivalries, setRivalries] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -159,6 +160,78 @@ function RoomDashboard() {
       // Sort by total score
       stats.sort((a, b) => b.totalScore - a.totalScore)
       setLeaderboard(stats)
+
+      // Compute rivalries
+      if (sessionIds.length > 0) {
+        const headToHead = {}
+
+        for (const sessionId of sessionIds) {
+          const { data: sessionRounds } = await supabase
+            .from('rounds')
+            .select('id')
+            .eq('game_session_id', sessionId)
+
+          if (!sessionRounds || sessionRounds.length === 0) continue
+
+          const sessionRoundIds = sessionRounds.map((r) => r.id)
+
+          const { data: sessionScores } = await supabase
+            .from('round_scores')
+            .select('*')
+            .in('round_id', sessionRoundIds)
+
+          if (!sessionScores || sessionScores.length === 0) continue
+
+          // Compute total per player for this session
+          const sessionTotals = {}
+          sessionScores.forEach((s) => {
+            if (!sessionTotals[s.player_id]) sessionTotals[s.player_id] = 0
+            sessionTotals[s.player_id] += s.round_score
+          })
+
+          // Find winner
+          let winnerId = null
+          let highestScore = -Infinity
+          Object.entries(sessionTotals).forEach(([playerId, score]) => {
+            if (score > highestScore) {
+              highestScore = score
+              winnerId = playerId
+            }
+          })
+
+          // Record head to head for each pair
+          const sessionPlayerIds = Object.keys(sessionTotals)
+          for (let i = 0; i < sessionPlayerIds.length; i++) {
+            for (let j = i + 1; j < sessionPlayerIds.length; j++) {
+              const a = sessionPlayerIds[i]
+              const b = sessionPlayerIds[j]
+              const key = [a, b].sort().join('_')
+
+              if (!headToHead[key]) {
+                headToHead[key] = { playerA: a, playerB: b, winsA: 0, winsB: 0, games: 0 }
+              }
+
+              headToHead[key].games++
+              if (winnerId === a) headToHead[key].winsA++
+              if (winnerId === b) headToHead[key].winsB++
+            }
+          }
+        }
+
+        // Convert to array and sort by games played
+        const rivalryList = Object.values(headToHead)
+          .filter((r) => r.games >= 2)
+          .sort((a, b) => b.games - a.games)
+          .slice(0, 5)
+          .map((r) => ({
+            ...r,
+            nameA: players.find((p) => p.id === r.playerA)?.name || 'Unknown',
+            nameB: players.find((p) => p.id === r.playerB)?.name || 'Unknown',
+          }))
+
+        setRivalries(rivalryList)
+      }
+
       setLoading(false)
     }
 
@@ -234,6 +307,68 @@ function RoomDashboard() {
             <p className="text-zinc-400 text-xs mt-1">
               {leaderboard[2].totalScore} pts
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Rivalries */}
+      {rivalries.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Swords size={18} color="#1E3A5F" strokeWidth={2.5} />
+            <h3 className="text-navy-500 font-bold text-lg">Rivalries</h3>
+          </div>
+          <div className="flex flex-col gap-3">
+            {rivalries.map((rivalry, index) => {
+              const totalWins = rivalry.winsA + rivalry.winsB
+              const percentA = totalWins > 0 ? (rivalry.winsA / totalWins) * 100 : 50
+              const isATiedominating = rivalry.winsA === rivalry.winsB
+
+              return (
+                <div
+                  key={index}
+                  className="bg-white border-2 border-zinc-100 rounded-2xl p-4 shadow-sm"
+                >
+                  {/* Players */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-left">
+                      <p className={`font-bold text-sm ${rivalry.winsA >= rivalry.winsB ? 'text-navy-500' : 'text-zinc-400'}`}>
+                        {rivalry.nameA}
+                      </p>
+                      <p className="text-orange-500 font-black text-xl">{rivalry.winsA}</p>
+                    </div>
+
+                    <div className="text-center">
+                      <p className="text-zinc-300 text-xs font-medium">{rivalry.games} games</p>
+                      <p className="text-zinc-400 text-sm font-bold">VS</p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className={`font-bold text-sm ${rivalry.winsB >= rivalry.winsA ? 'text-navy-500' : 'text-zinc-400'}`}>
+                        {rivalry.nameB}
+                      </p>
+                      <p className="text-orange-500 font-black text-xl">{rivalry.winsB}</p>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-orange-500 rounded-full transition-all"
+                      style={{ width: `${percentA}%` }}
+                    />
+                  </div>
+
+                  {/* Label */}
+                  <p className="text-zinc-400 text-xs text-center mt-2">
+                    {isATiedominating
+                      ? "It's a tie! 🤝"
+                      : `${rivalry.winsA > rivalry.winsB ? rivalry.nameA : rivalry.nameB} is dominating!`
+                    }
+                  </p>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
