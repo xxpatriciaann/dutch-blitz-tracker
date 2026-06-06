@@ -91,46 +91,47 @@ function RoomLayout({ children }) {
 
         {/* Tabs */}
         <div className="max-w-2xl mx-auto px-4">
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => navigate(tab.path)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition flex-shrink-0 ${
-                    isActive
-                      ? 'border-orange-500 text-orange-500'
-                      : 'border-transparent text-zinc-400 hover:text-navy-500'
-                  }`}
-                >
-                  <Icon size={15} strokeWidth={2.5} />
-                  {tab.label}
-                </button>
-              )
-            })}
-
-            {/* Record Game button */}
-            <div className="flex items-center pb-1 flex-shrink-0">
-              <button
-                onClick={() => navigate(`/room/${code}/record`)}
-                className={`flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white text-sm font-bold px-4 py-2 rounded-xl transition ${
-                  activeTab === 'record' ? 'bg-orange-600' : ''
-                }`}
-              >
-                <Plus size={15} strokeWidth={2.5} />
-                Record Game
-              </button>
+            {/* Tabs row */}
+            <div className="flex gap-1">
+                {tabs.map((tab) => {
+                const Icon = tab.icon
+                const isActive = activeTab === tab.id
+                return (
+                    <button
+                    key={tab.id}
+                    onClick={() => navigate(tab.path)}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition flex-shrink-0 ${
+                        isActive
+                        ? 'border-orange-500 text-orange-500'
+                        : 'border-transparent text-zinc-400 hover:text-navy-500'
+                    }`}
+                    >
+                    <Icon size={15} strokeWidth={2.5} />
+                    {tab.label}
+                    </button>
+                )
+                })}
             </div>
-          </div>
         </div>
       </div>
 
-      {/* Page content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* Record Game Button */}
+        <div className="max-w-2xl mx-auto px-4 pt-3 pb-1">
+        <button
+            onClick={() => navigate(`/room/${code}/record`)}
+            className={`flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition w-full justify-center ${
+            activeTab === 'record' ? 'bg-orange-600' : ''
+            }`}
+        >
+            <Plus size={15} strokeWidth={2.5} />
+            Record Game
+        </button>
+        </div>
+
+        {/* Page content */}
+        <div className="max-w-2xl mx-auto px-4 py-4">
         {children}
-      </div>
+        </div>
 
     </div>
   )
