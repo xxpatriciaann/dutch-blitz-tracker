@@ -5,7 +5,9 @@ import { ArrowRight, Plus, Users } from 'lucide-react'
 
 function Home() {
   const [roomName, setRoomName] = useState('')
+  const [roomPassword, setRoomPassword] = useState('')
   const [joinCode, setJoinCode] = useState('')
+  const [joinPassword, setJoinPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -27,11 +29,17 @@ function Home() {
     setLoading(true)
     setError('')
     const code = generateCode()
-    const { data, error } = await supabase
-      .from('rooms')
-      .insert([{ name: roomName, join_code: code }])
-      .select()
-      .single()
+    if (!roomPassword.trim()) {
+    setError('Please enter a room password!')
+    setLoading(false)
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('rooms')
+    .insert([{ name: roomName, join_code: code, password: roomPassword.trim() }])
+    .select()
+    .single()
     if (error) {
       setError('Something went wrong. Please try again.')
       setLoading(false)
@@ -55,6 +63,12 @@ function Home() {
       setError('Room not found. Check your join code!')
       return
     }
+
+    if (data.password && data.password !== joinPassword.trim()) {
+      setError('Wrong password. Please try again!')
+      return
+    }
+
     navigate(`/room/${data.join_code}`)
   }
 
@@ -101,6 +115,15 @@ function Home() {
             className="w-full bg-zinc-50 border-2 border-zinc-100 text-navy-500 placeholder-zinc-400 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-orange-400 transition font-medium"
           />
 
+          <input
+            type="password"
+            placeholder="Set a room password"
+            value={roomPassword}
+            onChange={(e) => setRoomPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
+            className="w-full bg-zinc-50 border-2 border-zinc-100 text-navy-500 placeholder-zinc-400 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-orange-400 transition font-medium"
+          />
+
           <button
             onClick={handleCreateRoom}
             className="w-full bg-navy-500 hover:bg-navy-600 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
@@ -140,6 +163,15 @@ function Home() {
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
             className="w-full bg-zinc-50 border-2 border-zinc-100 text-navy-500 placeholder-zinc-400 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-orange-400 transition tracking-widest font-mono font-bold"
+          />
+
+          <input
+            type="password"
+            placeholder="Enter room password"
+            value={joinPassword}
+            onChange={(e) => setJoinPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+            className="w-full bg-zinc-50 border-2 border-zinc-100 text-navy-500 placeholder-zinc-400 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-orange-400 transition font-medium"
           />
 
           <button
