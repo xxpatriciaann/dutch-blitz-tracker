@@ -52,20 +52,23 @@ function GameHistory() {
           // Get all scores
           const { data: scores } = await supabase
             .from('round_scores')
-            .select('*, players(name)')
+            .select('*, players(name, color)')
             .in('round_id', roundIds)
 
           if (!scores || scores.length === 0) {
             return { ...session, rounds: [], players: [], winner: null }
           }
 
+          
           // Compute total per player
           const playerTotals = {}
           const playerNames = {}
+          const playerColors = {}
           scores.forEach((s) => {
             if (!playerTotals[s.player_id]) {
               playerTotals[s.player_id] = 0
               playerNames[s.player_id] = s.players.name
+              playerColors[s.player_id] = s.players.color || '#1E3A5F'
             }
             playerTotals[s.player_id] += s.round_score
           })
@@ -85,6 +88,7 @@ function GameHistory() {
             .map(([id, total]) => ({
               id,
               name: playerNames[id],
+              color: playerColors[id],
               total
             }))
             .sort((a, b) => b.total - a.total)
@@ -96,6 +100,7 @@ function GameHistory() {
               round_number: round.round_number,
               scores: roundScores.map((s) => ({
                 name: s.players.name,
+                color: s.players.color || '#1E3A5F',
                 score: s.round_score,
                 placed: s.cards_placed,
                 remaining: s.cards_remaining
@@ -224,7 +229,7 @@ function GameHistory() {
                       }`}>
                         {index + 1}
                       </div>
-                      <span className="flex-1 text-navy-500 font-semibold text-sm">
+                      <span className="flex-1 font-semibold text-sm" style={{ color: player.color }}>
                         {player.name}
                       </span>
                       <span className="text-navy-500 font-black">{player.total} pts</span>
@@ -246,7 +251,7 @@ function GameHistory() {
                       <div className="flex flex-col gap-1">
                         {round.scores.map((score) => (
                           <div key={score.name} className="flex items-center justify-between">
-                            <span className="text-navy-500 text-sm font-medium">{score.name}</span>
+                            <span className="text-sm font-medium" style={{ color: score.color }}>{score.name}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-zinc-400 text-xs">
                                 {score.placed} placed · {score.remaining} left

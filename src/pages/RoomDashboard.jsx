@@ -92,21 +92,18 @@ function RoomDashboard() {
           .filter((s) => s.player_id === player.id)
           .map((s) => s.round_id)
 
-        const { data: rounds } = { data: null }
         const gamesPlayed = sessionIds.length > 0
           ? new Set(
               sessionPlayers
                 .filter((s) => s.player_id === player.id)
-                .map((s) => {
-                  const round = allScores.find((r) => r.round_id === s.round_id)
-                  return s.round_id
-                })
+                .map((s) => s.round_id)
             ).size
           : 0
 
         return {
           id: player.id,
           name: player.name,
+          color: player.color || '#1E3A5F',
           totalScore,
           gamesPlayed: playerRoundIds.length > 0 ? gamesPlayed : 0,
           wins: 0, // will compute below
@@ -275,7 +272,7 @@ function RoomDashboard() {
             <div className="w-10 h-10 bg-zinc-200 rounded-xl flex items-center justify-center mx-auto mb-2">
               <span className="text-zinc-600 font-black">2</span>
             </div>
-            <p className="text-navy-500 font-bold text-sm leading-tight">
+            <p className="font-bold text-sm leading-tight" style={{ color: leaderboard[1].color }}>
               {leaderboard[1].name}
             </p>
             <p className="text-zinc-400 text-xs mt-1">
@@ -301,7 +298,7 @@ function RoomDashboard() {
             <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-2">
               <span className="text-amber-600 font-black">3</span>
             </div>
-            <p className="text-navy-500 font-bold text-sm leading-tight">
+            <p className="font-bold text-sm leading-tight" style={{ color: leaderboard[2].color }}>
               {leaderboard[2].name}
             </p>
             <p className="text-zinc-400 text-xs mt-1">
@@ -393,7 +390,7 @@ function RoomDashboard() {
 
             {/* Name */}
             <div className="flex-1">
-              <p className="text-navy-500 font-bold">{player.name}</p>
+              <p className="font-bold" style={{ color: player.color }}>{player.name}</p>
               <p className="text-zinc-400 text-xs mt-0.5">
                 {player.gamesPlayed} games · {player.wins} wins
               </p>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { UserPlus, User, ChevronRight, Pencil, Trash2, X, Check } from 'lucide-react'
+import { UserPlus, User, ChevronRight, Pencil, Trash2, X, Check, Palette } from 'lucide-react'
 
 function Players() {
   const { code } = useParams()
@@ -13,7 +13,20 @@ function Players() {
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editingName, setEditingName] = useState('')
+  const [editingColor, setEditingColor] = useState('')
   const [deletingId, setDeletingId] = useState(null)
+  const [newColor, setNewColor] = useState('#1E3A5F')
+
+  const colorPalette = [
+    '#1E3A5F', // navy
+    '#f97316', // orange
+    '#ef4444', // red
+    '#16a34a', // green
+    '#3b82f6', // blue
+    '#a855f7', // purple
+    '#ec4899', // pink
+    '#eab308', // yellow
+  ]
 
   useEffect(() => {
     async function fetchData() {
@@ -56,7 +69,7 @@ function Players() {
 
     const { data, error } = await supabase
       .from('players')
-      .insert([{ room_id: roomId, name: newName.trim() }])
+      .insert([{ room_id: roomId, name: newName.trim(), color: newColor }])
       .select()
       .single()
 
@@ -76,16 +89,17 @@ function Players() {
 
     const { data, error } = await supabase
       .from('players')
-      .update({ name: editingName.trim() })
+      .update({ name: editingName.trim(), color: editingColor })
       .eq('id', playerId)
       .select()
       .single()
 
     if (error) return
 
-    setPlayers(players.map((p) => p.id === playerId ? { ...p, name: data.name } : p))
+    setPlayers(players.map((p) => p.id === playerId ? { ...p, name: data.name, color: data.color } : p))
     setEditingId(null)
     setEditingName('')
+    setEditingColor('')
   }
 
   async function handleDeletePlayer(playerId) {
@@ -115,22 +129,39 @@ function Players() {
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="e.g. Ursula"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddPlayer()}
-            className="flex-1 bg-zinc-50 border-2 border-zinc-100 text-navy-500 placeholder-zinc-400 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-400 transition font-medium"
-          />
-          <button
-            onClick={handleAddPlayer}
-            className="bg-navy-500 hover:bg-navy-600 text-white font-bold px-5 py-2.5 rounded-xl transition"
-          >
-            {loading ? '...' : 'Add'}
-          </button>
+        <div className="flex gap-2 mb-3">
+  <input
+    type="text"
+    placeholder="e.g. Ursula"
+    value={newName}
+    onChange={(e) => setNewName(e.target.value)}
+    onKeyDown={(e) => e.key === 'Enter' && handleAddPlayer()}
+    className="flex-1 bg-zinc-50 border-2 border-zinc-100 text-navy-500 placeholder-zinc-400 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-400 transition font-medium"
+  />
+  <button
+    onClick={handleAddPlayer}
+    className="bg-navy-500 hover:bg-navy-600 text-white font-bold px-5 py-2.5 rounded-xl transition"
+  >
+    {loading ? '...' : 'Add'}
+  </button>
+</div>
+
+      {/* Color picker */}
+      <div className="flex items-center gap-2">
+        <Palette size={14} color="#a1a1aa" strokeWidth={2} />
+        <div className="flex gap-1.5">
+          {colorPalette.map((c) => (
+            <button
+              key={c}
+              onClick={() => setNewColor(c)}
+              className={`w-6 h-6 rounded-full transition ${
+                newColor === c ? 'ring-2 ring-offset-2 ring-zinc-400' : ''
+              }`}
+              style={{ backgroundColor: c }}
+            />
+          ))}
         </div>
+      </div>
 
         {error && (
           <p className="text-red-400 text-sm mt-2 font-medium">{error}</p>
@@ -156,11 +187,15 @@ function Players() {
               {/* Normal view */}
               {editingId !== player.id && deletingId !== player.id && (
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-zinc-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-zinc-500 font-black text-sm">{index + 1}</span>
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: player.color || '#1E3A5F' }}
+                  >
+                    <span className="text-white font-black text-sm">{index + 1}</span>
                   </div>
                   <span
-                    className="flex-1 text-navy-500 font-bold text-base cursor-pointer hover:text-orange-500 transition"
+                    className="flex-1 font-bold text-base cursor-pointer hover:opacity-70 transition"
+                    style={{ color: player.color || '#1E3A5F' }}
                     onClick={() => navigate(`/room/${code}/player/${player.id}`)}
                   >
                     {player.name}
@@ -187,27 +222,41 @@ function Players() {
 
               {/* Edit view */}
               {editingId === player.id && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleEditPlayer(player.id)}
-                    className="flex-1 bg-zinc-50 border-2 border-orange-400 text-navy-500 rounded-xl px-3 py-2 focus:outline-none font-medium text-sm"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => handleEditPlayer(player.id)}
-                    className="w-8 h-8 bg-orange-500 hover:bg-orange-400 rounded-lg flex items-center justify-center transition"
-                  >
-                    <Check size={14} color="white" strokeWidth={2.5} />
-                  </button>
-                  <button
-                    onClick={() => { setEditingId(null); setEditingName('') }}
-                    className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-lg flex items-center justify-center transition"
-                  >
-                    <X size={14} color="#71717a" strokeWidth={2.5} />
-                  </button>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleEditPlayer(player.id)}
+                      className="flex-1 bg-zinc-50 border-2 border-orange-400 text-navy-500 rounded-xl px-3 py-2 focus:outline-none font-medium text-sm"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleEditPlayer(player.id)}
+                      className="w-8 h-8 bg-orange-500 hover:bg-orange-400 rounded-lg flex items-center justify-center transition"
+                    >
+                      <Check size={14} color="white" strokeWidth={2.5} />
+                    </button>
+                    <button
+                      onClick={() => { setEditingId(null); setEditingName(''); setEditingColor('') }}
+                      className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-lg flex items-center justify-center transition"
+                    >
+                      <X size={14} color="#71717a" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1.5 pl-1">
+                    {colorPalette.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setEditingColor(c)}
+                        className={`w-6 h-6 rounded-full transition ${
+                          editingColor === c ? 'ring-2 ring-offset-2 ring-zinc-400' : ''
+                        }`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
 
